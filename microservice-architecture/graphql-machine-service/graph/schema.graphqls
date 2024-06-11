@@ -1,0 +1,49 @@
+
+type Identifier {
+  name: String!
+  value: Float!
+}
+
+type Plc {
+  time: String!
+  machine: String!
+  identifier: [Identifier!]!
+}
+
+input IdentifierFilterInput {
+  identifier: StringQueryOperatorInput
+}
+
+input StringQueryOperatorInput {
+  eq: String
+  ne: String
+  in: [String]
+  nin: [String]
+  regex: String
+  glob: String
+}
+
+type State {
+  time: String!
+  machine: String!
+  name: String!
+  color: String!
+  value: Int!
+}
+
+type Query {
+  plcs(machine: String!, time: String!, limit: Int!, filter: IdentifierFilterInput): [Plc]!
+  states(machine: String!, limit: Int!): [State]
+}
+
+type Mutation {
+  createStates(input: [CreateStatesInput]!): [State!]!
+}
+
+input CreateStatesInput {
+  time: String!
+  machine: String!
+  name: String!
+  color: String!
+  value: Int!
+}

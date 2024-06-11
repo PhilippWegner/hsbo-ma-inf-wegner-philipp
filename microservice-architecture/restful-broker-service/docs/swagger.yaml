@@ -1,0 +1,85 @@
+basePath: /api
+definitions:
+  main.CreateStatesInput:
+    properties:
+      color:
+        type: string
+      machine:
+        type: string
+      name:
+        type: string
+      time:
+        type: string
+      value:
+        type: integer
+    type: object
+  main.Log:
+    properties:
+      data:
+        type: string
+      name:
+        type: string
+    type: object
+  main.Request:
+    properties:
+      action:
+        type: string
+      lastState:
+        $ref: '#/definitions/main.State'
+      log:
+        $ref: '#/definitions/main.Log'
+      machine:
+        type: string
+      states:
+        items:
+          $ref: '#/definitions/main.CreateStatesInput'
+        type: array
+    type: object
+  main.State:
+    properties:
+      color:
+        type: string
+      machine:
+        type: string
+      name:
+        type: string
+      time:
+        type: string
+      value:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a RESTful API for the Broker Service as a single point of entry
+    for all api caLLs.
+  title: Broker Service represented as RESTful API
+  version: "1.0"
+paths:
+  /handle:
+    post:
+      consumes:
+      - application/json
+      description: Handle request
+      parameters:
+      - description: Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/main.Request'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: Handle request
+      tags:
+      - api
+swagger: "2.0"
