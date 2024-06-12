@@ -43,13 +43,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/main.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/main.Response"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/main.Response"
                         }
                     }
                 }
@@ -77,6 +83,17 @@ const docTemplate = `{
                 }
             }
         },
+        "main.Identifier": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
         "main.Log": {
             "type": "object",
             "properties": {
@@ -84,6 +101,23 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "main.Plc": {
+            "type": "object",
+            "properties": {
+                "identifier": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/main.Identifier"
+                    }
+                },
+                "machine": {
+                    "type": "string"
+                },
+                "time": {
                     "type": "string"
                 }
             }
@@ -107,6 +141,26 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/main.CreateStatesInput"
+                    }
+                }
+            }
+        },
+        "main.Response": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "plcs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/main.Plc"
+                    }
+                },
+                "states": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/main.State"
                     }
                 }
             }

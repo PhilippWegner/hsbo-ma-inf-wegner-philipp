@@ -21,6 +21,12 @@ type Request struct {
 	Log       Log                  `json:"log,omitempty"`
 }
 
+type Response struct {
+	Plcs   []*Plc   `json:"plcs,omitempty"`
+	States []*State `json:"states,omitempty"`
+	Error  string   `json:"error,omitempty"`
+}
+
 type State struct {
 	Time    string `json:"time"`
 	Machine string `json:"machine"`
@@ -60,8 +66,9 @@ type Log struct {
 // @Accept  application/json
 // @Produce  application/json
 // @Param request body Request true "Request"
-// @Success 200 {object} object
-// @Failure 400 {object} string
+// @Success 200 {object} Response
+// @Failure 400 {object} Response
+// @Failure 500 {object} Response
 // @Router /handle [post]
 func (app *Config) Handle(ctx *gin.Context) {
 	log.Println("Handle request")
@@ -83,7 +90,8 @@ func (app *Config) Handle(ctx *gin.Context) {
 		app.insertStates(ctx, request.States)
 	default:
 		log.Println("Invalid action")
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid action"})
+		response := Response{Error: "Invalid action"}
+		ctx.JSON(http.StatusBadRequest, response)
 		return
 	}
 }
@@ -92,7 +100,7 @@ func (app *Config) lastState(ctx *gin.Context, machine string) {
 	// graphql client
 	client := graphql.NewClient(DEFAULT_GRAPHQL_MACHINE_URL, nil)
 	var query struct {
-		States []*State `graphql:"createStates(machine: $machine, limit: $limit)"`
+		States []*State `graphql:"states(machine: $machine, limit: $limit)"`
 	}
 	variables := map[string]interface{}{
 		"machine": machine,
@@ -100,11 +108,12 @@ func (app *Config) lastState(ctx *gin.Context, machine string) {
 	}
 	err := client.Query(context.Background(), &query, variables)
 	if err != nil {
-		log.Println("error:", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response := Response{Error: err.Error()}
+		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
-	ctx.JSON(http.StatusOK, query.States)
+	response := Response{States: query.States}
+	ctx.JSON(http.StatusOK, response)
 }
 
 func (app *Config) nextPlcs(ctx *gin.Context, machine string, state State) {
@@ -122,27 +131,30 @@ func (app *Config) nextPlcs(ctx *gin.Context, machine string, state State) {
 	// log.Println("variables:", variables)
 	err := client.Query(context.Background(), &query, variables)
 	if err != nil {
-		log.Println("error:", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// log.Println("error:", err)
+		response := Response{Error: err.Error()}
+		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
-	ctx.JSON(http.StatusOK, query.Plcs)
+	response := Response{Plcs: query.Plcs}
+	ctx.JSON(http.StatusOK, response)
 }
 
 func (app *Config) insertStates(ctx *gin.Context, statesInput []*CreateStatesInput) {
 	// graphql client
 	client := graphql.NewClient(DEFAULT_GRAPHQL_MACHINE_URL, nil)
 	var mutation struct {
-		CreateStates []*CreateStatesInput `graphql:"createStates(input: $input)"`
+		CreateStates []*State `graphql:"createStates(input: $input)"`
 	}
 	variables := map[string]interface{}{
 		"input": statesInput,
 	}
 	err := client.Mutate(context.Background(), &mutation, variables)
 	if err != nil {
-		log.Println("error:", err)
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		response := Response{Error: err.Error()}
+		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
-	ctx.JSON(http.StatusOK, mutation.CreateStates)
+	response := Response{States: mutation.CreateStates}
+	ctx.JSON(http.StatusOK, response)
 }

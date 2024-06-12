@@ -13,11 +13,29 @@ definitions:
       value:
         type: integer
     type: object
+  main.Identifier:
+    properties:
+      name:
+        type: string
+      value:
+        type: number
+    type: object
   main.Log:
     properties:
       data:
         type: string
       name:
+        type: string
+    type: object
+  main.Plc:
+    properties:
+      identifier:
+        items:
+          $ref: '#/definitions/main.Identifier'
+        type: array
+      machine:
+        type: string
+      time:
         type: string
     type: object
   main.Request:
@@ -33,6 +51,19 @@ definitions:
       states:
         items:
           $ref: '#/definitions/main.CreateStatesInput'
+        type: array
+    type: object
+  main.Response:
+    properties:
+      error:
+        type: string
+      plcs:
+        items:
+          $ref: '#/definitions/main.Plc'
+        type: array
+      states:
+        items:
+          $ref: '#/definitions/main.State'
         type: array
     type: object
   main.State:
@@ -74,11 +105,15 @@ paths:
         "200":
           description: OK
           schema:
-            type: object
+            $ref: '#/definitions/main.Response'
         "400":
           description: Bad Request
           schema:
-            type: string
+            $ref: '#/definitions/main.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/main.Response'
       summary: Handle request
       tags:
       - api
