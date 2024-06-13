@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -29,7 +30,7 @@ func main() {
 		start := time.Now()
 		app.looprunner()
 		duration := time.Since(start)
-		log.Printf("looprunner took %v\n", duration)
+		app.ApiRepository.CreateLog(data.Log{Name: "looprunner", Data: fmt.Sprintf("looprunner took %v", duration)})
 	}
 }
 
@@ -41,7 +42,7 @@ func (c *Config) looprunner() {
 			defer wg.Done()
 			err := c.calculate(machine)
 			if err != nil {
-				log.Printf("calculate(%v) failed: %v\n", machine, err)
+				c.ApiRepository.CreateLog(data.Log{Name: "error", Data: fmt.Sprintf("calculate(%v) failed: %v", machine, err)})
 			}
 		}(machine)
 	}

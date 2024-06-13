@@ -3,7 +3,7 @@ package data
 import (
 	"bytes"
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 )
 
@@ -26,13 +26,18 @@ type State struct {
 	Value   int    `json:"value"`
 }
 
+type Log struct {
+	Name string `json:"name"`
+	Data string `json:"data"`
+}
+
 type RequestPayload struct {
 	Action    string   `json:"action"`
 	Machine   string   `json:"machine,omitempty"`
 	LastState State    `json:"lastState,omitempty"`
 	Plcs      []*Plc   `json:"plcs,omitempty"`
 	States    []*State `json:"states,omitempty"`
-	// Log       Log      `json:"log,omitempty"`
+	Log       Log      `json:"log,omitempty"`
 }
 
 type ResponsePayload struct {
@@ -50,7 +55,6 @@ func NewApiRepository(restful_api string) *ApiRepository {
 }
 
 func (r *ApiRepository) GetPlcs(machine string, laststate State) ([]*Plc, error) {
-	log.Println("GetPlcs")
 	RequestPayload := RequestPayload{
 		Action:    "next-plcs",
 		Machine:   machine,
@@ -76,14 +80,11 @@ func (r *ApiRepository) GetPlcs(machine string, laststate State) ([]*Plc, error)
 	if err != nil {
 		return nil, err
 	}
-	// log len of plcs
-	log.Printf("len(plcs): %v\n", len(responsePayload.Plcs))
 	return responsePayload.Plcs, nil
 
 }
 
 func (r *ApiRepository) GetStates(machine string) ([]*State, error) {
-	log.Println("GetStates")
 	RequestPayload := RequestPayload{
 		Action:  "last-state",
 		Machine: machine,
@@ -108,16 +109,37 @@ func (r *ApiRepository) GetStates(machine string) ([]*State, error) {
 	if err != nil {
 		return nil, err
 	}
-	// log len of states
-	log.Printf("len(states): %v\n", len(responsePayload.States))
+	_ = r.CreateLog(Log{Name: "GetStates", Data: fmt.Sprintf("len(states): %v", len(responsePayload.States))})
 	return responsePayload.States, nil
 }
 
 func (r *ApiRepository) CreateState(states []*State) error {
-	log.Println("CreateState")
 	RequestPayload := RequestPayload{
 		Action: "insert-states",
 		States: states,
+	}
+	requestPayloadJson, err := json.Marshal(RequestPayload)
+	if err != nil {
+		return err
+	}
+	request, err := http.NewRequest("POST", r.restful_api, bytes.NewBuffer(requestPayloadJson))
+	if err != nil {
+		return err
+	}
+	request.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+	return nil
+}
+
+func (r *ApiRepository) CreateLog(logEntry Log) error {
+	RequestPayload := RequestPayload{
+		Action: "log",
+		Log:    logEntry,
 	}
 	requestPayloadJson, err := json.Marshal(RequestPayload)
 	if err != nil {

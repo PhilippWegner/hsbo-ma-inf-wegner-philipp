@@ -5,13 +5,17 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/PhilippWegner/hsbo-ma-inf-wegner-philipp/microservice-architecture/restful-broker-service/model"
 	"github.com/gin-gonic/gin"
 	"github.com/hasura/go-graphql-client"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const DEFAULT_LIMIT = 1000
 
-const DEFAULT_GRAPHQL_MACHINE_URL = "http://localhost:8081/query"
+const DEFAULT_GRAPHQL_URL = "http://localhost:8081/query"
+const DEFAULT_GRPC_URL = "localhost:8082"
 
 type Request struct {
 	Action    string               `json:"action"`
@@ -88,6 +92,9 @@ func (app *Config) Handle(ctx *gin.Context) {
 	case "insert-states":
 		log.Println("insert-states")
 		app.insertStates(ctx, request.States)
+	case "log":
+		log.Println("log")
+		app.insertLog(ctx, request.Log)
 	default:
 		log.Println("Invalid action")
 		response := Response{Error: "Invalid action"}
@@ -98,7 +105,7 @@ func (app *Config) Handle(ctx *gin.Context) {
 
 func (app *Config) lastState(ctx *gin.Context, machine string) {
 	// graphql client
-	client := graphql.NewClient(DEFAULT_GRAPHQL_MACHINE_URL, nil)
+	client := graphql.NewClient(DEFAULT_GRAPHQL_URL, nil)
 	var query struct {
 		States []*State `graphql:"states(machine: $machine, limit: $limit)"`
 	}
@@ -118,7 +125,7 @@ func (app *Config) lastState(ctx *gin.Context, machine string) {
 
 func (app *Config) nextPlcs(ctx *gin.Context, machine string, state State) {
 	// graphql client
-	client := graphql.NewClient(DEFAULT_GRAPHQL_MACHINE_URL, nil)
+	client := graphql.NewClient(DEFAULT_GRAPHQL_URL, nil)
 	var query struct {
 		Plcs []*Plc `graphql:"plcs(machine: $machine, time: $time, limit: $limit, filter: {identifier: {in: $in}})"`
 	}
@@ -142,7 +149,7 @@ func (app *Config) nextPlcs(ctx *gin.Context, machine string, state State) {
 
 func (app *Config) insertStates(ctx *gin.Context, statesInput []*CreateStatesInput) {
 	// graphql client
-	client := graphql.NewClient(DEFAULT_GRAPHQL_MACHINE_URL, nil)
+	client := graphql.NewClient(DEFAULT_GRAPHQL_URL, nil)
 	var mutation struct {
 		CreateStates []*State `graphql:"createStates(input: $input)"`
 	}
@@ -157,4 +164,17 @@ func (app *Config) insertStates(ctx *gin.Context, statesInput []*CreateStatesInp
 	}
 	response := Response{States: mutation.CreateStates}
 	ctx.JSON(http.StatusOK, response)
+}
+
+func (app *Config) insertLog(ctx *gin.Context, log Log) {
+	// grpc client
+	conn, err := grpc.NewClient(DEFAULT_GRPC_URL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		response := Response{Error: err.Error()}
+		ctx.JSON(http.StatusInternalServerError, response)
+		return
+	}
+	defer conn.Close()
+	client := model.NewLogServiceClient(conn)
+	client.WriteLog(context.Background(), &model.LogRequest{LogEntry: &model.Log{Name: log.Name, Data: log.Data}})
 }
