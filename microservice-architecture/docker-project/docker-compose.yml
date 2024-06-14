@@ -1,0 +1,59 @@
+version: '3'
+
+name: microservice-architecture
+
+networks:
+  microservice-architecture-network:
+    name: microservice-architecture-network
+    external: true
+
+services:
+  graphql-machine-service:
+    constainer_name: graphql-machine-service
+    build:
+      context: ./../graphql-machine-service
+      dockerfile: ./../graphql-machine-service/graphql-machine-service.dockerfile
+    ports:
+      - "8081:80"
+    deploy:
+      mode: replicated
+      replicas: 1
+    networks:
+      - microservice-architecture-network
+
+  grpc-logger-service:
+    constainer_name: grpc-logger-service
+    build:
+      context: ./../grpc-logger-service
+      dockerfile: ./../grpc-logger-service/grpc-logger-service.dockerfile
+    ports:
+      - "8082:80"
+    deploy:
+      mode: replicated
+      replicas: 1 
+    networks:
+      - microservice-architecture-network
+    
+  restful-broker-service:
+    constainer_name: restful-broker-service
+    build:
+      context: ./../restful-broker-service
+      dockerfile: ./../restful-broker-service/restful-broker-service.dockerfile
+    ports:
+      - "8080:80"
+    deploy:
+      mode: replicated
+      replicas: 1 
+    networks:
+      - microservice-architecture-network
+
+  statemachine-service:
+    constainer_name: statemachine-service
+    build:
+      context: ./../statemachine-service
+      dockerfile: ./../statemachine-service/statemachine-service.dockerfile
+    deploy:
+      mode: replicated
+      replicas: 1 
+    networks:
+      - microservice-architecture-network
