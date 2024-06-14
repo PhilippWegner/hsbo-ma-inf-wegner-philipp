@@ -8,7 +8,7 @@ import (
 	_ "github.com/PhilippWegner/hsbo-ma-inf-wegner-philipp/microservice-architecture/restful-broker-service/docs"
 )
 
-const webPort = "8080"
+const webPort = "80"
 
 type Config struct{}
 

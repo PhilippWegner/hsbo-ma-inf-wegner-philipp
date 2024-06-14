@@ -14,14 +14,16 @@ type LogServiceServer struct {
 var mongo = database.ConnectMongodb()
 
 func (api *LogServiceServer) WriteLog(ctx context.Context, in *model.LogRequest) (*model.LogResponse, error) {
-	log := database.LogEntry{
+	logEntry := database.LogEntry{
 		Name: in.LogEntry.GetName(),
 		Data: in.LogEntry.GetData(),
 	}
 
-	err := mongo.InsertLog(log)
+	err := mongo.InsertLog(logEntry)
 	if err != nil {
-		return nil, err
+		return &model.LogResponse{
+			Result: "failed!",
+		}, err
 	}
 
 	return &model.LogResponse{

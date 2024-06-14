@@ -10,7 +10,7 @@ import (
 	"github.com/PhilippWegner/hsbo-ma-inf-wegner-philipp/microservice-architecture/graphql-machine-service/graph"
 )
 
-const defaultPort = "8081"
+const defaultPort = "80"
 
 func main() {
 	port := os.Getenv("PORT")

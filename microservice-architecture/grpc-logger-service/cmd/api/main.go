@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	grpcPort = "8082"
+	grpcPort = "80"
 )
 
 func main() {

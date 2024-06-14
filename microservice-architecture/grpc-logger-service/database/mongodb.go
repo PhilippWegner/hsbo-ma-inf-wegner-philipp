@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	dbHost = "localhost"
+	dbHost = "mongodb"
 	dbPort = "27017"
 	dbUser = "admin"
 	dbPass = "password"
@@ -44,6 +44,7 @@ func ConnectMongodb() *Mongodb {
 }
 
 func (m *Mongodb) InsertLog(entry LogEntry) error {
+	log.Println("Inserting into logs")
 	collection := m.client.Database("logs").Collection("logs")
 	_, err := collection.InsertOne(context.TODO(), LogEntry{
 		Name:      entry.Name,
@@ -55,6 +56,5 @@ func (m *Mongodb) InsertLog(entry LogEntry) error {
 		log.Println("Error inserting into logs:", err)
 		return err
 	}
-
 	return nil
 }

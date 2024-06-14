@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	dbHost = "localhost"
+	dbHost = "influxdb"
 	dbPort = "8086"
 	dbUser = "root"
 	dbPass = "root"

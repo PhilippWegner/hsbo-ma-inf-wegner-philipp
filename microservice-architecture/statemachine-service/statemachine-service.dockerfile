@@ -1,4 +1,4 @@
-FROM golang:11.22.4-alpine AS builder
+FROM golang:1.22.4-alpine AS builder
 
 RUN mkdir /app
 
@@ -6,7 +6,7 @@ COPY . /app
 
 WORKDIR /app
 
-RUN CGO_ENABLED=0 go build -o statemachine-service-app ./cmd/api
+RUN CGO_ENABLED=0 go build -o statemachine-service-app ./cmd/service
 
 RUN chmod +x /app/statemachine-service-app
 

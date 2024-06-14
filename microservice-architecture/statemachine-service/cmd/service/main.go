@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	restful_api = "http://localhost:8080/api/handle"
+	restful_api = "http://restful-api:80/api/handle"
 	machines    = []string{"presse_11"}
 )
 

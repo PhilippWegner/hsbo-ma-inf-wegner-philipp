@@ -14,8 +14,8 @@ import (
 
 const DEFAULT_LIMIT = 1000
 
-const DEFAULT_GRAPHQL_URL = "http://localhost:8081/query"
-const DEFAULT_GRPC_URL = "localhost:8082"
+const DEFAULT_GRAPHQL_URL = "graphql-api:80/query"
+const DEFAULT_GRPC_URL = "grpc-api:80"
 
 type Request struct {
 	Action    string               `json:"action"`
@@ -105,7 +105,7 @@ func (app *Config) Handle(ctx *gin.Context) {
 
 func (app *Config) lastState(ctx *gin.Context, machine string) {
 	// graphql client
-	client := graphql.NewClient(DEFAULT_GRAPHQL_URL, nil)
+	client := graphql.NewClient("http://"+DEFAULT_GRAPHQL_URL, nil)
 	var query struct {
 		States []*State `graphql:"states(machine: $machine, limit: $limit)"`
 	}
@@ -125,7 +125,7 @@ func (app *Config) lastState(ctx *gin.Context, machine string) {
 
 func (app *Config) nextPlcs(ctx *gin.Context, machine string, state State) {
 	// graphql client
-	client := graphql.NewClient(DEFAULT_GRAPHQL_URL, nil)
+	client := graphql.NewClient("http://"+DEFAULT_GRAPHQL_URL, nil)
 	var query struct {
 		Plcs []*Plc `graphql:"plcs(machine: $machine, time: $time, limit: $limit, filter: {identifier: {in: $in}})"`
 	}
@@ -149,7 +149,7 @@ func (app *Config) nextPlcs(ctx *gin.Context, machine string, state State) {
 
 func (app *Config) insertStates(ctx *gin.Context, statesInput []*CreateStatesInput) {
 	// graphql client
-	client := graphql.NewClient(DEFAULT_GRAPHQL_URL, nil)
+	client := graphql.NewClient("http://"+DEFAULT_GRAPHQL_URL, nil)
 	var mutation struct {
 		CreateStates []*State `graphql:"createStates(input: $input)"`
 	}
@@ -166,15 +166,17 @@ func (app *Config) insertStates(ctx *gin.Context, statesInput []*CreateStatesInp
 	ctx.JSON(http.StatusOK, response)
 }
 
-func (app *Config) insertLog(ctx *gin.Context, log Log) {
+func (app *Config) insertLog(ctx *gin.Context, logEntry Log) {
 	// grpc client
 	conn, err := grpc.NewClient(DEFAULT_GRPC_URL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		response := Response{Error: err.Error()}
+		log.Println("Error:", err)
 		ctx.JSON(http.StatusInternalServerError, response)
 		return
 	}
 	defer conn.Close()
 	client := model.NewLogServiceClient(conn)
-	client.WriteLog(context.Background(), &model.LogRequest{LogEntry: &model.Log{Name: log.Name, Data: log.Data}})
+	client.WriteLog(context.Background(), &model.LogRequest{LogEntry: &model.Log{Name: logEntry.Name, Data: logEntry.Data}})
+	log.Println("Log written")
 }
