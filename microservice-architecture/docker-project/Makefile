@@ -9,8 +9,7 @@ up:
 down:
 	docker compose down
 
-up_build:
-	docker compose down
+up_build: down
 	docker compose up --build -d
 
 build_local: build_graphql_machine_service build_grpc_logger_service build_restful_broker_service build_statemaschine

@@ -13,7 +13,7 @@ services:
     deploy:
       mode: replicated
       replicas: 1
-
+    restart: always
 
   grpc-logger-service:
     container_name: grpc-api
@@ -26,7 +26,6 @@ services:
       mode: replicated
       replicas: 1 
 
-    
   restful-broker-service:
     container_name: restful-api
     build:
@@ -37,7 +36,6 @@ services:
     deploy:
       mode: replicated
       replicas: 1 
-
 
   statemachine-service:
     container_name: statemachine-service
